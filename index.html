@@ -1,0 +1,67 @@
+<html>
+	<head>
+		<style type="text/css">
+			.playerCh{
+				height:100px;
+				width:500px;
+				margin:30px auto 0 auto;
+				border:3px solid #000000;
+				text-align: center;
+				background-color: cornflowerblue;
+				cursor: pointer;
+				border-radius: 50px;
+						 }
+			.playerCh:hover{
+				background-color: aquamarine;
+			}
+		</style>
+
+	</head>
+	<body>
+		<div class="playerCh" onClick="btnClick(1)"><h1>SinglePlayer</h1></div>
+		<div class="playerCh" onClick="btnClick(2)"><h1>Multiplayer</h1></div>
+
+	</body>
+	<script type="text/javascript" src="public/js/jquery-1.4.4.min.js"></script>
+	<script type="text/javascript">
+		function btnClick(sign){
+			var url=null;
+			if(sign==1){
+				url="/server/singlePlayer";
+			}else if(sign==2){
+				url="/server/multiPlayer";
+			}
+			$.ajax({
+				url:'http://localhost',
+				dataType:'text',
+				async:true,
+				data:'hello this is browser',
+				type:'post',
+				success:function(data){
+					console.log('success: '+data);
+				},
+				error:function(data){
+					console.log('error: '+data);
+				}
+			});
+
+
+		}
+		/*$(function(){
+			$.ajax({
+				url:'http://localhost',
+				dataType:'text',
+				async:true,
+				data:'hello this is browser',
+				type:'post',
+				success:function(data){
+					console.log('success: '+data);
+				},
+				error:function(data){
+					console.log('error: '+data);
+				}
+
+			});
+		});*/
+	</script>
+</html>
