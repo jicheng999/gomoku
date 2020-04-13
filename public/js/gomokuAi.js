@@ -1,6 +1,7 @@
 function GomokuAi(BLACK,WHITE){
 	this.BLACK=BLACK;
 	this.WHITE=WHITE;
+	this.maxMockDeep=2;
 	this.FREE = 0;
 	this.scoreRule=[0,1,10,100,1000,10000,10000,10000,10000,10000,10000,10000,10000,10000,10000];
 	this.callSetChess=function(chessMap){
@@ -15,14 +16,14 @@ function GomokuAi(BLACK,WHITE){
 		let newChessmap;
 		let maxScore = -99999999;
 		let maxPoint = [];
+		newChessmap = this.copyChessmap(chessMap);
 		for (let i = 0; i < chessMap.length; i++) {
 			for (let j = 0; j < chessMap[i].length; j++) {
-				newChessmap = this.copyChessmap(chessMap);
 				if(this.FREE!=newChessmap[i][j]){
 					continue;
 				}
 				newChessmap[i][j] = color;
-				let score = this.analysis(newChessmap);
+				let score = this.mockDownChess(newChessmap,1);
 				if(score==maxScore){
 					maxPoint.push(i+","+j);
 				}else if(score>maxScore){
@@ -30,10 +31,37 @@ function GomokuAi(BLACK,WHITE){
 					maxPoint = [];
 					maxPoint.push(i+","+j);
 				}
+				newChessmap[i][j]=this.FREE;
 			}
 		}
 
         return this.whereIsTheCenterOfMap(maxPoint);
+	}
+
+	this.mockDownChess=function(newChessmap,deep){
+		if(deep>=this.maxMockDeep){
+			return this.analysis(newChessmap);
+		}else{
+			let isMyColor = (0==deep%2);
+			let maxScore=999999*(isMyColor?-1:1);
+			let needMax =isMyColor;
+			let color = (isMyColor?this.myColor:(this.myColor ==this.BLACK?this.WHITE:this.BLACK));
+			deep++;
+			for (let i = 0; i < newChessmap.length; i++) {
+				for (let j = 0; j < newChessmap[i].length; j++) {
+					if(this.FREE!=newChessmap[i][j]){
+						continue;
+					}
+					newChessmap[i][j] = color;
+					let score = this.mockDownChess(newChessmap,deep);
+					if(needMax?score>maxScore:score<maxScore){
+						maxScore = score;
+					}
+					newChessmap[i][j] = this.FREE;
+				}
+			}
+			return maxScore;
+		}
 	}
 
 	// 找出离棋盘中心更近的点
