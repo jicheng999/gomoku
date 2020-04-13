@@ -43,7 +43,7 @@ function GomokuAi(BLACK,WHITE){
 		for (let i = 0; i < pointArr.length; i++) {
 			let point = pointArr[i];
 			let pointXY = point.split(",");
-			let dis = ((pointXY[0]-7)&128)+((pointXY[1]-7)&128);
+			let dis = Math.abs(pointXY[0]-7)+Math.abs(pointXY[1]-7);
 			if(dis<min){
 				min= dis;
 				result = {x:parseInt(pointXY[0]),y:parseInt(pointXY[1])};
@@ -97,7 +97,7 @@ function GomokuAi(BLACK,WHITE){
         var index = 0;
         var line = [15];
         do {
-            line[index] = chessBoard[i][j];
+            line[index] = chessBoard[j][i];
             i += xa;
             j += ya;
             index++;
@@ -125,7 +125,7 @@ function GomokuAi(BLACK,WHITE){
             subTotal += thisScore;
         }
 
-        for (let i = 0; i < 15; i++) {
+        for (let i = 1; i < 15; i++) {
 			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, i, 0, 1, 1));
             subTotal += thisScore;
         }
@@ -135,7 +135,7 @@ function GomokuAi(BLACK,WHITE){
             subTotal += thisScore;
         }
 
-        for (let i = 0; i < 15; i++) {
+        for (let i = 1; i < 15; i++) {
 			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, i, 15 - 1, 1, -1));
             subTotal += thisScore;
         }
