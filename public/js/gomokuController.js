@@ -49,8 +49,8 @@ function GameController(params){
            alert(winStr);
            return true;
         }
-   
-        this.afterSetChess();
+        //this.afterSetChess();
+         setTimeout(this.afterSetChess,1);
         return true;
     }
 
@@ -210,10 +210,11 @@ function GameController(params){
         //return {arr0=arr0,arr1=arr1,arr2=arr2,arr3=arr3};
     }
 
+    var that=this;
     this.afterSetChess=function(){
     	//如果有一个玩家，且当前该ai下子
-    	if(1==globalParams.playerNum&&this.players[stepNum%2]!=globalParams.playerColor){
-            this.callAi();
+    	if(1==globalParams.playerNum&&that.players[stepNum%2]!=globalParams.playerColor){
+            that.callAi();
     	}
     }
 }
