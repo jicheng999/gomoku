@@ -14,13 +14,17 @@ $(function(){
 	imgLoader({
 		qipanSrc:"../img/game/qipan.jpg",
 		chessManSrc_black:"../img/game/chessman_black.png",
-		chessManSrc_white:"../img/game/chessman_white.png",
+        chessManSrc_white:"../img/game/chessman_white.png",
+        chessManSrc_black_red:"../img/game/chessman_black_red.png",
+		chessManSrc_white_red:"../img/game/chessman_white_red.png",
 		loadFinish:gameIni});
 
 });     
 
 
-
+function backChess(){
+    gameCon.backChess();
+}
 
 //鼠标左键点击事件
 function onLeftMouseDown(e){
@@ -77,7 +81,7 @@ function Painter(params){
     	this.paintBackground();
     }*/
 
-    this.paintChess=function(x,y,chess){
+    this.paintChess=function(x,y,chess,currentX,currentY){
     	var start_x=globalParams.start_x;
 	    var start_y=globalParams.start_y;
         var chessman_Btw=globalParams.chessman_Btw;
@@ -85,23 +89,29 @@ function Painter(params){
         var thisX=start_x+chessman_Btw*x;
         var thisY=start_x+chessman_Btw*y;
 
-    	if(WHITE==chess){
+        if(typeof(currentX)!="undefined"&&x === currentX &&y === currentY && WHITE==chess){
+            this.ct.drawImage(this.imgObj.imgWhiteRed, 0, 0,this.chessX,this.chessY,
+                thisX,thisY,this.chessDX,this.chessDY);
+        }else if(typeof(currentY)!="undefined"&&x === currentX &&y === currentY  && BLACK==chess){
+            this.ct.drawImage(this.imgObj.imgBlackRed, 0, 0,this.chessX,this.chessY,
+                thisX,thisY,this.chessDX,this.chessDY);
+        }else if(WHITE==chess){
            this.ct.drawImage(this.imgObj.imgWhite, 0, 0,this.chessX,this.chessY,
            	thisX,thisY,this.chessDX,this.chessDY);
-    	}
-    	if(BLACK==chess){
+    	}else if(BLACK==chess){
            this.ct.drawImage(this.imgObj.imgBlack, 0, 0,this.chessX,this.chessY,
            	thisX,thisY,this.chessDX,this.chessDY);
     	}
         
     }
 
-    this.rePaintAll=function(){
+    // 当前落子点 x,y
+    this.rePaintAll=function(x,y){
     	this.paintBackground();
     	for(var i=this.chessMap.length-1;i>=0;i--){
     		var thisVal=this.chessMap[i];
     		for(var j=thisVal.length-1;j>=0;j--){
-                 this.paintChess(i,j,thisVal[j]);
+                 this.paintChess(i,j,thisVal[j],x,y);
     		}
     	}
     }
@@ -141,6 +151,8 @@ function imgLoader(params){
     qipanSrc=params.qipanSrc;
     chessManSrc_black=params.chessManSrc_black;
     chessManSrc_white=params.chessManSrc_white;
+    chessManSrc_black_red=params.chessManSrc_black_red;
+    chessManSrc_white_red=params.chessManSrc_white_red;
     imgLoadNum=0;
     loadFinish=params.loadFinish||function(){
 		console.log('未指定图片加载完成回调函数');
@@ -149,16 +161,22 @@ function imgLoader(params){
     var imgQipan=new Image();
     var imgBlack=new Image();
     var imgWhite=new Image();
+    var imgBlackRed=new Image();
+    var imgWhiteRed=new Image();
 
     imgObj.imgQipan=imgQipan;
     imgObj.imgBlack=imgBlack;
     imgObj.imgWhite=imgWhite;
+    imgObj.imgBlackRed=imgBlackRed;
+    imgObj.imgWhiteRed=imgWhiteRed;
 
     imgNum=imgObj.imgObj;
 
     imgQipan.src=qipanSrc;
     imgBlack.src=chessManSrc_black;
     imgWhite.src=chessManSrc_white;
+    imgBlackRed.src=chessManSrc_black_red;
+    imgWhiteRed.src=chessManSrc_white_red;
 
     imgObj.length=-1;
     for(var ele in imgObj){

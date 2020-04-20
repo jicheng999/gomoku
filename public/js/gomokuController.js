@@ -7,7 +7,42 @@ function GameController(params){
 	this.players=params.players||[BLACK,WHITE];
 	this.ai=params.ai;
 	this.disabled=false;
-	var stepNum=0;
+    var stepNum=0;
+
+    function Node(x,y,color,pre) {
+        return {x:x,y:y,color:color,next:null,pre:pre};
+    }
+
+    // 落子记录
+    this.history = new Node();
+
+    this.pushHistory= function(x,y,color){
+        var node = this.history;
+        while(null !== node.next){
+            node = node.next;
+        }
+        node.next = new Node(x,y,color,node);
+        stepNum++;
+    }
+
+    // 回退
+    this.backHistory = function(){
+        if(0==stepNum){
+            return null;
+        }
+        var node = this.history;
+        while(null !== node.next){
+            node = node.next;
+        }
+        this.chessMap[node.x][node.y] = this.NO_COLOR;
+        node = node.pre;
+        node.next = null;
+        this.chessMap[node.x][node.y] = this.NO_COLOR;
+        node = node.pre;
+        node.next = null;
+        stepNum-=2;
+        return node;
+    }
 
     this.ini=function(){
     	this.painter.paint();
@@ -42,8 +77,8 @@ function GameController(params){
         }
         this.chessMap[x][y]=chess; 
         this.painter.chessMap=this.chessMap;
-        stepNum++;
-        this.painter.rePaintAll();
+        this.pushHistory(x,y,chess);
+        this.painter.rePaintAll(x,y);
         if(iswin2(x,y,this.chessMap,chess)){
            var winStr=(chess==BLACK?'黑棋':'白棋')+'胜利！';
            alert(winStr);
@@ -54,8 +89,8 @@ function GameController(params){
         return true;
     }
 
-    this.rePaintAll=function(){
-    	this.painter.rePaintAll();
+    this.rePaintAll=function(x,y){
+    	this.painter.rePaintAll(x,y);
     }
 
     this.createAi=function(){
@@ -216,5 +251,13 @@ function GameController(params){
     	if(1==globalParams.playerNum&&that.players[stepNum%2]!=globalParams.playerColor){
             that.callAi();
     	}
+    }
+
+    // 悔棋
+    this.backChess = function(){
+        var node = this.backHistory();
+        if(null!=node){
+            this.rePaintAll(node.x,node.y);
+        }
     }
 }
