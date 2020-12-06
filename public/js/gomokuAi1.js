@@ -1,7 +1,8 @@
 function GomokuAi(BLACK, WHITE) {
 	this.BLACK = BLACK;
 	this.WHITE = WHITE;
-	this.maxMockDeep = 3;
+    this.maxMockDeep = 2;
+    this.mockStepArr = [];
 	this.FREE = 0;
 	this.scoreRule = [0, 1, 10, 100, 1000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000];
 	this.callSetChess = function (chessMap) {
@@ -42,8 +43,11 @@ function GomokuAi(BLACK, WHITE) {
 			if (this.FREE != newChessmap[i][j]) {
 				continue;
 			}
-			newChessmap[i][j] = color;
-			let score = this.mockDownChess(newChessmap, 1);
+            newChessmap[i][j] = color;
+            this.mockStepArr.push(i + "," + j);
+            let score = this.mockDownChess(newChessmap, 1);
+            this.mockStepArr.pop();
+            console.log('color:'+ color + ' ['+i+','+j+'] score:'+score);
 			if (score == maxScore) {
 				maxPoint.push(i + "," + j);
 			} else if (score > maxScore) {
@@ -178,8 +182,10 @@ function GomokuAi(BLACK, WHITE) {
 				if (this.FREE != newChessmap[i][j]) {
 					continue;
 				}
-				newChessmap[i][j] = color;
-				let score = this.mockDownChess(newChessmap, deep);
+                newChessmap[i][j] = color;
+                this.mockStepArr.push(i + "," + j);
+                let score = this.mockDownChess(newChessmap, deep);
+                this.mockStepArr.pop();
 				if (needMax ? score > maxScore : score < maxScore) {
 					maxScore = score;
 				}
@@ -237,8 +243,8 @@ function GomokuAi(BLACK, WHITE) {
 		var whiteLinelength = 0;
 		var blackScoreTotal = 0;
 		var whiteScoreTotal = 0;
-
-		for (var i = 0; i < line.length; i++) {
+		for(var j=0; j<line.length-5;j++){
+			for (var i = 0; i < j+5; i++) {
 			if (this.FREE == line[i]) {
 				blackLinelength = 0;
 				whiteLinelength = 0;
@@ -254,6 +260,8 @@ function GomokuAi(BLACK, WHITE) {
 				blackScoreTotal += this.scoreRule[blackLinelength];
 			}
 		}
+		}
+		
 
 		var sub = blackScoreTotal - whiteScoreTotal;
 		return this.BLACK == this.myColor ? sub : -sub;
@@ -265,7 +273,7 @@ function GomokuAi(BLACK, WHITE) {
 		var index = 0;
 		var line = [15];
 		do {
-			line[index] = chessBoard[j][i];
+			line[index] = chessBoard[i][j];
 			i += xa;
 			j += ya;
 			index++;
@@ -283,7 +291,9 @@ function GomokuAi(BLACK, WHITE) {
 
 		//竖排积分
 		for (let i = 0; i < 15; i++) {
-			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, i, 0, 0, 1));
+			let line = this.pickLineFromChessMap(chessBoard, i, 0, 0, 1);
+			// console.log(line);
+			let thisScore = this.fiveInLine(line);
 			subTotal += thisScore;
 		}
 
