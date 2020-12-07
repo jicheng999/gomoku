@@ -8,7 +8,8 @@ var globalParams={
     chessman_Btw:35,//棋子间距
     playerColor:BLACK,//玩家走子顺序1,2
     playerNum:1,
-    drawing:$('#drawing')[0]
+    drawing:$('#drawing')[0],
+    position:$('#position')[0]
 }
 $(function(){
 	imgLoader({
@@ -49,6 +50,15 @@ function onLeftMouseDown(e){
 
         gameCon.setChess(chessX,chessY,globalParams.playerColor);
 		}
+}
+
+function onMyMouseMove(e){
+    var locParams=getPointOnCanvas(globalParams.drawing,e.pageX,e.pageY);
+		x=locParams.x;
+        y=locParams.y;
+        var chessX=Math.floor((x-globalParams.start_x)/globalParams.chessman_Btw);
+	    var chessY=Math.floor((y-globalParams.start_y)/globalParams.chessman_Btw);
+    globalParams.position.innerText='( '+chessX+' , '+chessY+' )';
 }
 
 
@@ -141,6 +151,8 @@ function gameIni(imgObj){
         
         
         drawing.onmousedown = onLeftMouseDown;
+        //鼠标移动
+        drawing.onmousemove = onMyMouseMove;
         
         //初始化游戏
 		gameCon.ini();

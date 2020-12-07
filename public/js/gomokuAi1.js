@@ -4,7 +4,8 @@ function GomokuAi(BLACK, WHITE) {
     this.maxMockDeep = 2;
     this.mockStepArr = [];
 	this.FREE = 0;
-	this.scoreRule = [0, 1, 10, 100, 1000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000, 100000];
+	this.socreRecord=[];
+	this.scoreRule = [0, 1, 10, 100, 1000, 900000, 900000, 900000, 900000, 900000, 900000, 900000, 900000, 900000, 900000];
 	this.callSetChess = function (chessMap) {
 		var date = new Date();
 		var result = this.think(chessMap, this.WHITE);
@@ -45,7 +46,7 @@ function GomokuAi(BLACK, WHITE) {
 			}
             newChessmap[i][j] = color;
             this.mockStepArr.push(i + "," + j);
-            let score = this.mockDownChess(newChessmap, 1);
+            let score = this.mockDownChess(newChessmap, 1).sub;
             this.mockStepArr.pop();
             console.log('color:'+ color + ' ['+i+','+j+'] score:'+score);
 			if (score == maxScore) {
@@ -166,11 +167,12 @@ function GomokuAi(BLACK, WHITE) {
 
 	this.mockDownChess = function (newChessmap, deep) {
 		let thisScore = this.analysis(newChessmap)
-		if (deep >= this.maxMockDeep||Math.abs(thisScore)>50000) {
+		if (deep >= this.maxMockDeep||Math.abs(thisScore.sub)>50000||thisScore.whoWin!=this.FREE) {
 			return thisScore;
 		} else {
 			let isMyColor = (0 == deep % 2);
-			let maxScore = 999999 * (isMyColor ? -1 : 1);
+            let maxScore = 999999 * (isMyColor ? -1 : 1);
+            let maxScoreObj = {};
 			let needMax = isMyColor;
 			let color = (isMyColor ? this.myColor : (this.myColor == this.BLACK ? this.WHITE : this.BLACK));
 			deep++;
@@ -184,10 +186,12 @@ function GomokuAi(BLACK, WHITE) {
 				}
                 newChessmap[i][j] = color;
                 this.mockStepArr.push(i + "," + j);
-                let score = this.mockDownChess(newChessmap, deep);
+                let scoreObj = this.mockDownChess(newChessmap, deep);
+                let score = scoreObj.sub;
                 this.mockStepArr.pop();
 				if (needMax ? score > maxScore : score < maxScore) {
-					maxScore = score;
+                    maxScore = score;
+                    maxScoreObj = scoreObj;
 				}
 				newChessmap[i][j] = this.FREE;
 			}
@@ -206,7 +210,7 @@ function GomokuAi(BLACK, WHITE) {
 			// 	}
 			// }
 
-			return maxScore;
+			return maxScoreObj;
 		}
 	}
 
@@ -243,28 +247,67 @@ function GomokuAi(BLACK, WHITE) {
 		var whiteLinelength = 0;
 		var blackScoreTotal = 0;
 		var whiteScoreTotal = 0;
+		//是否产生五连子的赢棋局面 FREE - 无  WHITE - 白赢 BLACK - 黑赢
+		var whoWin = this.FREE;
 		for(var j=0; j<line.length-5;j++){
-			for (var i = 0; i < j+5; i++) {
-			if (this.FREE == line[i]) {
-				blackLinelength = 0;
-				whiteLinelength = 0;
-				blackScoreTotal += this.scoreRule[blackLinelength];
-				whiteScoreTotal += this.scoreRule[whiteLinelength];
-			} else if (this.WHITE == line[i]) {
-				whiteLinelength++;
-				blackLinelength = 0;
-				whiteScoreTotal += this.scoreRule[whiteLinelength];
-			} else if (this.BLACK == line[i]) {
-				blackLinelength++;
-				whiteLinelength = 0;
-				blackScoreTotal += this.scoreRule[blackLinelength];
-			}
-		}
+			blackLinelength = 0;
+            whiteLinelength = 0;
+            //积分规则  五子内 只有一种棋，则这种棋积分，有几子，积对应分数， 出现任意敌对子，此五子格不计分
+            //先算白子
+            for (var i = j; i < j+5; i++) {
+                if (this.WHITE == line[i]) {
+                    whiteLinelength++;
+                } else if (this.BLACK == line[i]) {
+                    break;
+                }
+            }
+
+            //算黑子
+            for (var i = j; i < j+5; i++) {
+                if (this.BLACK == line[i]) {
+                    blackLinelength++;
+                } else if (this.WHITE == line[i]) {
+                    break;
+                }
+            }
+            
+            blackScoreTotal += this.scoreRule[blackLinelength];
+            whiteScoreTotal += this.scoreRule[whiteLinelength];
+            if(whiteLinelength>=5){
+                whoWin = this.WHITE;
+            }
+            if(blackLinelength>=5){
+                whoWin = this.BLACK;
+            }
+            // 算黑子
+		// 	for (var i = j; i < j+5; i++) {
+		// 	if (this.FREE == line[i]) {
+		// 		blackLinelength = 0;
+		// 		whiteLinelength = 0;
+		// 		blackScoreTotal += this.scoreRule[blackLinelength];
+		// 		whiteScoreTotal += this.scoreRule[whiteLinelength];
+		// 	} else if (this.WHITE == line[i]) {
+		// 		whiteLinelength++;
+		// 		blackLinelength = 0;
+		// 		whiteScoreTotal += this.scoreRule[whiteLinelength];
+		// 		if(whiteLinelength>=5){
+		// 			whoWin = this.WHITE;
+		// 		}
+		// 	} else if (this.BLACK == line[i]) {
+		// 		blackLinelength++;
+		// 		whiteLinelength = 0;
+		// 		blackScoreTotal += this.scoreRule[blackLinelength];
+		// 		if(blackLinelength>=5){
+		// 			whoWin = this.BLACK;
+		// 		}
+		// 	}
+		// }
 		}
 		
 
 		var sub = blackScoreTotal - whiteScoreTotal;
-		return this.BLACK == this.myColor ? sub : -sub;
+		// return this.BLACK == this.myColor ? sub : -sub;
+		return {blackScore:blackScoreTotal,whiteScore:whiteScoreTotal,whoWin:whoWin};
 	}
 
 	this.pickLineFromChessMap = function (chessBoard, startX, startY, xa, ya) {
@@ -282,11 +325,22 @@ function GomokuAi(BLACK, WHITE) {
 	}
 
 	this.analysis = function (chessBoard) {
+		this.socreRecord = [];
 		var subTotal = 0;
+		var whiteTotal = 0;
+		var blackTotal = 0;
+		var whoWin = this.FREE;
 		// 横排积分
 		for (let i = 0; i < 15; i++) {
+			let line = this.pickLineFromChessMap(chessBoard, 0, i, 1, 0);
 			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, 0, i, 1, 0));
-			subTotal += thisScore;
+			whoWin=thisScore.whoWin;
+			let whiteScore = thisScore.whiteScore;
+			let blackScore = thisScore.blackScore;
+			whiteTotal+=whiteScore;
+			blackTotal+=blackScore;
+			this.socreRecord.push({'pos':'横向',score:whiteScore,arr:line});
+			subTotal += (thisScore - blackScore);
 		}
 
 		//竖排积分
@@ -294,31 +348,72 @@ function GomokuAi(BLACK, WHITE) {
 			let line = this.pickLineFromChessMap(chessBoard, i, 0, 0, 1);
 			// console.log(line);
 			let thisScore = this.fiveInLine(line);
-			subTotal += thisScore;
+			whoWin=thisScore.whoWin;
+			let whiteScore = thisScore.whiteScore;
+			let blackScore = thisScore.blackScore;
+			whiteTotal+=whiteScore;
+			blackTotal+=blackScore;
+			this.socreRecord.push({'pos':'纵向',score:whiteScore,arr:line});
+			subTotal += (thisScore - blackScore);
 		}
 
 
 		for (let i = 14; i >= 0; i--) {
-			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, 0, i, 1, 1));
-			subTotal += thisScore;
+			let line = this.pickLineFromChessMap(chessBoard, 0, i, 1, 1);
+			let thisScore = this.fiveInLine(line);
+			whoWin=thisScore.whoWin;
+			let whiteScore = thisScore.whiteScore;
+			let blackScore = thisScore.blackScore;
+			whiteTotal+=whiteScore;
+			blackTotal+=blackScore;
+			this.socreRecord.push({'pos':'1/1斜',score:whiteScore,arr:line});
+			subTotal += (thisScore - blackScore);
 		}
 
 		for (let i = 1; i < 15; i++) {
-			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, i, 0, 1, 1));
-			subTotal += thisScore;
+			let line = this.pickLineFromChessMap(chessBoard, i, 0, 1, 1);
+			let thisScore = this.fiveInLine(line);
+			whoWin=thisScore.whoWin;
+			let whiteScore = thisScore.whiteScore;
+			let blackScore = thisScore.blackScore;
+			whiteTotal+=whiteScore;
+			blackTotal+=blackScore;
+			this.socreRecord.push({'pos':'1/1斜',score:whiteScore,arr:line});
+			subTotal += (thisScore - blackScore);
 		}
 
 		for (let i = 14; i >= 0; i--) {
-			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, 0, i, 1, -1));
-			subTotal += thisScore;
+			let line = this.pickLineFromChessMap(chessBoard, 0, i, 1, -1);
+			let thisScore = this.fiveInLine(line);
+			whoWin=thisScore.whoWin;
+			let whiteScore = thisScore.whiteScore;
+			let blackScore = thisScore.blackScore;
+			whiteTotal+=whiteScore;
+			blackTotal+=blackScore;
+			this.socreRecord.push({'pos':'1/-1斜',score:whiteScore,arr:line});
+			subTotal += (thisScore - blackScore);
 		}
 
 		for (let i = 1; i < 15; i++) {
-			let thisScore = this.fiveInLine(this.pickLineFromChessMap(chessBoard, i, 15 - 1, 1, -1));
-			subTotal += thisScore;
+			let line = this.pickLineFromChessMap(chessBoard, i, 15 - 1, 1, -1);
+			let thisScore = this.fiveInLine(line);
+			whoWin=thisScore.whoWin;
+			let whiteScore = thisScore.whiteScore;
+			let blackScore = thisScore.blackScore;
+			whiteTotal+=whiteScore;
+			blackTotal+=blackScore;
+			this.socreRecord.push({'pos':'1/-1斜',score:whiteScore,arr:line});
+			subTotal += (thisScore - blackScore);
 		}
 
-		return subTotal;
+		//如果已经有赢家 ，败者分数清零
+		if(this.WHITE == whoWin){
+			blackTotal =0;
+		}else if (this.BLACK == whoWin){
+			whiteTotal = 0;
+		}
+
+		return {sub:(whiteTotal - blackTotal),whoWin:whoWin};
 	}
 
 
